@@ -3,8 +3,6 @@
 
 #include <unistd.h>
 
-//#include <visualization_msgs/Marker.h>
-//#include <sensor_msgs/PointCloud2.h>
 #include <tf/tf.h>
 #include <tf/transform_broadcaster.h>
 
@@ -31,11 +29,8 @@ class GenerateMesh
 public:
   GenerateMesh(ros::NodeHandle& nh)
   {
-    tsdf_client_ = nh.serviceClient<yak::GetTSDF>("/yak/get_tsdf");
+    tsdf_client_ = nh.serviceClient<yak::GetTSDF>("/kinfu/get_tsdf");
     mesh_server_ = nh.advertiseService("get_mesh", &GenerateMesh::GetMesh, this);
-    //point_cloud_publisher_ = nh.advertise<sensor_msgs::PointCloud2>("tsdf_cloud", 1);
-
-    //vis_pub_ = nh.advertise<visualization_msgs::Marker>( "visualization_marker", 0 );
 
     grid = openvdb::FloatGrid::create(/*background value=*/1.0);
 
@@ -78,14 +73,6 @@ public:
 //    ROS_INFO("Making an example sphere...");
 //    GenerateMesh::MakeSphereVoxelGrid(grid);
     ROS_INFO("Done building volume");
-    //ROS_INFO("Finished reading point cloud from TSDF");
-    // Max cloud size at 512^3 is 134,217,728
-
-    //pcl::io::savePCDFileASCII ("./clouds/test_pcd.pcd", cloud);
-    //pcl::io::savePCDFileASCII ("/home/jschornak/clouds/test_pcd.pcd", cloud);
-
-
-   // ROS_INFO("Saved point cloud");
 
     ROS_INFO("Meshing voxel volume...");
     openvdb::tools::VolumeToMesh mesher;
@@ -94,41 +81,6 @@ public:
     WriteMesh("/home/jschornak/clouds/mesh.obj", mesher);
     //WriteMesh("/home/jschornak/ros/tsdf_ws/src/kinfu_ros/meshes/mesh.obj", mesher);
     ROS_INFO("Saved .obj to file");
-
-//    visualization_msgs::Marker marker;
-//    marker.type = visualization_msgs::Marker::MESH_RESOURCE;
-//    //marker.mesh_resource = "package://pr2_description/meshes/base_v0/base.dae";
-//    marker.mesh_resource = "package://kinfu_ros/meshes/mesh.stl";
-
-//    marker.header.frame_id = "camera_depth_optical_frame";
-//    marker.header.stamp = ros::Time();
-//    marker.ns = "meshing_node";
-//    marker.id = 0;
-//   // marker.type = visualization_msgs::Marker::SPHERE;
-//    marker.action = visualization_msgs::Marker::ADD;
-//    marker.pose.position.x = 1;
-//    marker.pose.position.y = 1;
-//    marker.pose.position.z = 1;
-//    marker.pose.orientation.x = 0.0;
-//    marker.pose.orientation.y = 0.0;
-//    marker.pose.orientation.z = 0.0;
-//    marker.pose.orientation.w = 1.0;
-//    marker.scale.x = 1;
-//    marker.scale.y = 0.1;
-//    marker.scale.z = 0.1;
-//    marker.color.a = 1.0; // Don't forget to set the alpha!
-//    marker.color.r = 0.0;
-//    marker.color.g = 1.0;
-//    marker.color.b = 0.0;
-
-//    vis_pub_.publish(marker);
-
-    //ROS_INFO("Updated point cloud publisher");
-    //sensor_msgs::PointCloud2 cloud_msg;
-    //pcl::toROSMsg(cloud, cloud_msg);
-    //std::string frame_id = "camera_depth_optical_frame";
-    //cloud_msg.header.frame_id = cloud_msg.header.frame_id.empty() ? frame_id : cloud_msg.header.frame_id;
-    //point_cloud_publisher_.publish(cloud_msg);
 
     return true;
   }
@@ -141,42 +93,10 @@ public:
     return true;
   }
 
-//  bool MakePointCloud(pcl::PointCloud<pcl::PointXYZ>& cloud, std::vector<unsigned int>& data, int size_x, int size_y, int size_z, int res_x, int res_y, int res_z) {
-//    float voxel_dim_x = (float)size_x/(float)res_x;
-//    float voxel_dim_y = (float)size_y/(float)res_y;
-//    float voxel_dim_z = (float)size_z/(float)res_z;
-
-//    ROS_INFO_STREAM("Voxel X dim: " << voxel_dim_x);
-
-//    for (int i = 0; i < res_x; i++) {
-//      for (int j = 0; j < res_y; j++) {
-//        for (int k = 0; k < res_z; k++) {
-//          int currentData = data[res_y*res_z*k + res_y*j + i];
-//          half_float::half currentValue;
-//          int currentWeight;
-
-//          GetTSDFData(currentData, currentValue, currentWeight);
-//          if (currentWeight > 40 && currentValue < 0.1 && currentValue > -0.1) {
-//            //ROS_INFO_STREAM("Found an occupied voxel at (" << i << ", " << j << ", " << k << ")");
-
-//            pcl::PointXYZ currentPoint((float)i*voxel_dim_x, (float)j*voxel_dim_y, (float)k*voxel_dim_z);
-//            cloud.push_back(currentPoint);
-//            //usleep(100000);
-//          }
-//        }
-//      }
-//    }
-//    ROS_INFO_STREAM("Made a cloud of size " << cloud.points.size());
-//    ROS_INFO_STREAM("The first point is at " << cloud.points[0].x << " " << cloud.points[0].y << " " << cloud.points[0].z);
-
-//    return true;
-//  }
-
   bool MakeVoxelGrid(openvdb::FloatGrid::Ptr& grid, std::vector<unsigned int>& data, int size_x, int size_y, int size_z, int res_x, int res_y, int res_z) {
     typedef typename openvdb::FloatGrid::ValueType ValueT;
 
     openvdb::FloatGrid::Accessor accessor = grid->getAccessor();
-    //openvdb::FloatGrid::Ptr grid = openvdb::FloatGrid::create(/*background value=*/2.0);
 
     float voxel_dim_x = (float)size_x/(float)res_x;
     //float voxel_dim_y = (float)size_y/(float)res_y;
@@ -208,17 +128,10 @@ public:
     grid->setTransform(openvdb::math::Transform::createLinearTransform(/*voxel size=*/voxel_dim_x));
     }
 
-
-
-
     bool MakeSphereVoxelGrid(openvdb::FloatGrid::Ptr& grid) {
       grid = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(1.0, openvdb::Vec3f(0,0,0), /*voxel size=*/0.5, /*width=*/4.0);
     }
-
-    //pcl::PointCloud<pcl::PointXYZ> cloud;
     openvdb::FloatGrid::Ptr grid;
-
-
 
 private:
   void WriteMesh(const char* filename,
@@ -251,12 +164,8 @@ private:
     file.close();
   }
 
-
   ros::ServiceClient tsdf_client_;
   ros::ServiceServer mesh_server_;
-  //ros::Publisher point_cloud_publisher_;
-  //ros::Publisher vis_pub_;
-
 };
 
 
