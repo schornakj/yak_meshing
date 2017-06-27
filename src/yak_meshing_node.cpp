@@ -12,9 +12,9 @@
 #include <yak_meshing/GetMeshRequest.h>
 #include <yak_meshing/GetMeshResponse.h>
 
-#include <kinfu_ros/GetTSDF.h>
+#include <yak/GetTSDF.h>
 
-#include <kinfu_ros/GetTSDF.h>
+#include <yak/GetTSDF.h>
 
 #include <half.hpp>
 #include <openvdb/openvdb.h>
@@ -31,7 +31,7 @@ class GenerateMesh
 public:
   GenerateMesh(ros::NodeHandle& nh)
   {
-    tsdf_client_ = nh.serviceClient<kinfu_ros::GetTSDF>("/kinfu/get_tsdf");
+    tsdf_client_ = nh.serviceClient<yak::GetTSDF>("/yak/get_tsdf");
     mesh_server_ = nh.advertiseService("get_mesh", &GenerateMesh::GetMesh, this);
     //point_cloud_publisher_ = nh.advertise<sensor_msgs::PointCloud2>("tsdf_cloud", 1);
 
@@ -43,7 +43,7 @@ public:
 
   bool GetMesh(yak_meshing::GetMeshRequest& req, yak_meshing::GetMeshResponse& res) {
     ROS_INFO("Attempting to get TSDF");
-    kinfu_ros::GetTSDF srv;
+    yak::GetTSDF srv;
     if (!tsdf_client_.call(srv))
     {
       ROS_ERROR("Couldn't get TSDF");

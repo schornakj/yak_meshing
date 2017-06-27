@@ -18,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   pcl_ros
   visualization_msgs
-  kinfu_ros
+  yak
 )
 
 find_library(OPENVDB_LIBRARY NAMES openvdb)
